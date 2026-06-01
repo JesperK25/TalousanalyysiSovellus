@@ -27,16 +27,15 @@ export default function Home() {
   useEffect(() => {
     fetchTransactions();
   }, []);
-
-  const fetchTransactions = async () => {
-    try {
-      const res = await axios.get('https://talousanalyysisovellus-production.up.railway.app/');
-      setTransactions(res.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
+const fetchTransactions = async () => {
+  try {
+    const res = await axios.get('https://talousanalyysisovellus-production.up.railway.app/transactions/');
+    setTransactions(Array.isArray(res.data) ? res.data : []);
+  } catch (err) {
+    console.error(err);
+    setTransactions([]);
+  }
+};
   const handleUpload = async () => {
     if (!file) return;
     setLoading(true);
