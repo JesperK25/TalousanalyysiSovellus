@@ -23,12 +23,22 @@ async def upload_csv(file: UploadFile = File(...), db: Session = Depends(get_db)
     df = pd.read_csv(io.StringIO(text), sep=None, engine="python")
 
     if "Valmistumispäivä" in df.columns and "Kuvaus" in df.columns and "Määrä" in df.columns:
+        # Revolut-formaatti
         df = df.rename(columns={
             "Valmistumispäivä": "date",
             "Kuvaus": "description",
             "Määrä": "amount"
         })
         df["date"] = df["date"].str[:10]
+    elif "Saaja/Maksaja" in df.columns and "Määrä" in df.columns:
+        # Säästöpankki-formaatti
+        df = df.rename(columns={
+            "Päivämäärä": "date",
+            "Saaja/Maksaja": "description",
+            "Määrä": "amount"
+        })
+        df["date"] = pd.to_datetime(df["date"], format="%d.%m.%Y", errors="coerce").dt.strftime("%Y-%m-%d")
+        df["amount"] = df["amount"].astype(str).str.replace(",", ".").astype(float)
     else:
         required = {"date", "description", "amount"}
         if not required.issubset(df.columns):
