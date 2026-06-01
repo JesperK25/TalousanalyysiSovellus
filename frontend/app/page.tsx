@@ -57,7 +57,7 @@ export default function Home() {
     return acc;
   }, {});
 
-  const chartData = Object.values(monthlyData).sort((a, b) => a.month.localeCompare(b.month));
+  const chartData = (Object.values(monthlyData) as {month: string, tulot: number, kulut: number}[]).sort((a, b) => a.month.localeCompare(b.month));
 
   return (
     <main className="min-h-screen bg-gray-950 text-white p-8">
