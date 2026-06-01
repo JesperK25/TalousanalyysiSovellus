@@ -30,7 +30,7 @@ export default function Home() {
 
   const fetchTransactions = async () => {
     try {
-      const res = await axios.get('https://talousanalyysisovellus-production.up.railway.app/transactions/');
+      const res = await axios.get('https://talousanalyysisovellus-production.up.railway.app/');
       setTransactions(res.data);
     } catch (err) {
       console.error(err);
