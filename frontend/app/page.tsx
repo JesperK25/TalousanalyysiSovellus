@@ -30,7 +30,7 @@ export default function Home() {
 
   const fetchTransactions = async () => {
     try {
-      const res = await axios.get('http://localhost:8000/transactions/');
+      const res = await axios.get('https://talousanalyysisovellus-production.up.railway.app/transactions/');
       setTransactions(res.data);
     } catch (err) {
       console.error(err);
@@ -43,7 +43,7 @@ export default function Home() {
     const formData = new FormData();
     formData.append('file', file);
     try {
-      const res = await axios.post('http://localhost:8000/transactions/upload', formData);
+      const res = await axios.post('https://talousanalyysisovellus-production.up.railway.app', formData);
       setMessage(res.data.message);
       fetchTransactions();
     } catch (err) {
@@ -162,7 +162,7 @@ export default function Home() {
                 onClick={async () => {
                   setAnalyysiLoading(true);
                   try {
-                    const res = await axios.get('http://localhost:8000/ai/analyysi');
+                    const res = await axios.get('https://talousanalyysisovellus-production.up.railway.app/ai/analyysi');
                     setAnalyysi(res.data.analyysi);
                   } catch (err) {
                     setAnalyysi('Virhe analyysin hakemisessa.');
