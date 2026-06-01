@@ -49,7 +49,8 @@ export default function Home() {
   const totalIncome = income.reduce((sum, t) => sum + t.amount, 0);
 
   // Kuukausidata barchart-kuvaajaan
-  const monthlyData = transactions.reduce((acc, t) => {
+  type MonthData = {month: string, tulot: number, kulut: number};
+  const monthlyData = transactions.reduce<Record<string, MonthData>>((acc, t) => {
     const month = t.date.slice(0, 7);
     if (!acc[month]) acc[month] = { month, tulot: 0, kulut: 0 };
     if (t.amount > 0) acc[month].tulot += t.amount;
@@ -57,7 +58,7 @@ export default function Home() {
     return acc;
   }, {});
 
-  const chartData = (Object.values(monthlyData) as {month: string, tulot: number, kulut: number}[]).sort((a, b) => a.month.localeCompare(b.month));
+  const chartData = Object.values(monthlyData).sort((a, b) => a.month.localeCompare(b.month));
 
   return (
     <main className="min-h-screen bg-gray-950 text-white p-8">
