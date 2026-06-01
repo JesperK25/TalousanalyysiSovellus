@@ -59,3 +59,9 @@ async def upload_csv(file: UploadFile = File(...), db: Session = Depends(get_db)
 @router.get("/")
 def get_transactions(db: Session = Depends(get_db)):
     return db.query(Transaction).order_by(Transaction.date.desc()).all()
+
+@router.delete("/clear")
+def clear_transactions(db: Session = Depends(get_db)):
+    db.query(Transaction).delete()
+    db.commit()
+    return {"message": "Kaikki transaktiot poistettu"}
