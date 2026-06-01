@@ -27,15 +27,17 @@ export default function Home() {
   useEffect(() => {
     fetchTransactions();
   }, []);
-const fetchTransactions = async () => {
-  try {
-    const res = await axios.get('https://talousanalyysisovellus-production.up.railway.app/transactions/');
-    setTransactions(Array.isArray(res.data) ? res.data : []);
-  } catch (err) {
-    console.error(err);
-    setTransactions([]);
-  }
-};
+
+  const fetchTransactions = async () => {
+    try {
+      const res = await axios.get('https://talousanalyysisovellus-production.up.railway.app/transactions/');
+      setTransactions(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error(err);
+      setTransactions([]);
+    }
+  };
+
   const handleUpload = async () => {
     if (!file) return;
     setLoading(true);
@@ -75,23 +77,28 @@ const fetchTransactions = async () => {
   ).map(([name, value]) => ({ name, value: parseFloat(value.toFixed(2)) }));
 
   return (
-    <main className="min-h-screen bg-gray-950 text-white p-8">
-      <h1 className="text-3xl font-bold mb-2">💰 Talousanalyysi</h1>
-      <p className="text-gray-400 mb-8">Lataa tiliotteesi ja analysoi kulutuksesi</p>
+    <main className="min-h-screen bg-gray-950 text-white p-4 sm:p-8">
+      {/* HEADER */}
+      <h1 className="text-2xl sm:text-3xl font-bold mb-2">💰 Talousanalyysi</h1>
+      <p className="text-gray-400 mb-6 sm:mb-8 text-sm sm:text-base">Lataa tiliotteesi ja analysoi kulutuksesi</p>
 
-      <div className="bg-gray-900 rounded-2xl p-6 mb-6 border border-gray-800">
+      {/* TIEDOSTON LATAUS */}
+      <div className="bg-gray-900 rounded-2xl p-4 sm:p-6 mb-6 border border-gray-800">
         <h2 className="text-lg font-semibold mb-4">Lataa tiliote (CSV)</h2>
-        <div className="flex gap-4 items-center">
-          <input
-            type="file"
-            accept=".csv"
-            onChange={e => setFile(e.target.files?.[0] || null)}
-            className="text-sm text-gray-400"
-          />
+        <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+          <label className="flex-1 min-w-0">
+            <span className="block text-sm text-gray-400 mb-1 sm:hidden">Valitse tiedosto</span>
+            <input
+              type="file"
+              accept=".csv"
+              onChange={e => setFile(e.target.files?.[0] || null)}
+              className="text-sm text-gray-400 w-full"
+            />
+          </label>
           <button
             onClick={handleUpload}
             disabled={loading || !file}
-            className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 px-4 py-2 rounded-lg text-sm font-medium transition"
+            className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 px-4 py-2 rounded-lg text-sm font-medium transition w-full sm:w-auto shrink-0"
           >
             {loading ? 'Ladataan...' : 'Lataa'}
           </button>
@@ -101,61 +108,68 @@ const fetchTransactions = async () => {
 
       {transactions.length > 0 && (
         <>
-          <div className="grid grid-cols-3 gap-4 mb-6">
-            <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
-              <p className="text-gray-400 text-sm mb-1">Tulot yhteensä</p>
-              <p className="text-2xl font-bold text-green-400">+{totalIncome.toFixed(2)} €</p>
+          {/* YHTEENVETO-KORTIT — 2 saraketta mobiilissa, Saldo koko leveys, 3 desktopilla */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
+            <div className="bg-gray-900 rounded-2xl p-4 sm:p-6 border border-gray-800">
+              <p className="text-gray-400 text-xs sm:text-sm mb-1">Tulot yhteensä</p>
+              <p className="text-lg sm:text-2xl font-bold text-green-400 truncate">+{totalIncome.toFixed(2)} €</p>
             </div>
-            <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
-              <p className="text-gray-400 text-sm mb-1">Kulut yhteensä</p>
-              <p className="text-2xl font-bold text-red-400">-{totalExpenses.toFixed(2)} €</p>
+            <div className="bg-gray-900 rounded-2xl p-4 sm:p-6 border border-gray-800">
+              <p className="text-gray-400 text-xs sm:text-sm mb-1">Kulut yhteensä</p>
+              <p className="text-lg sm:text-2xl font-bold text-red-400 truncate">-{totalExpenses.toFixed(2)} €</p>
             </div>
-            <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
-              <p className="text-gray-400 text-sm mb-1">Saldo</p>
-              <p className={`text-2xl font-bold ${totalIncome - totalExpenses >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+            <div className="col-span-2 sm:col-span-1 bg-gray-900 rounded-2xl p-4 sm:p-6 border border-gray-800">
+              <p className="text-gray-400 text-xs sm:text-sm mb-1">Saldo</p>
+              <p className={`text-lg sm:text-2xl font-bold ${totalIncome - totalExpenses >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                 {(totalIncome - totalExpenses).toFixed(2)} €
               </p>
             </div>
           </div>
 
-          <div className="bg-gray-900 rounded-2xl p-6 mb-6 border border-gray-800">
+          {/* PYLVÄSKAAVIO */}
+          <div className="bg-gray-900 rounded-2xl p-4 sm:p-6 mb-6 border border-gray-800">
             <h2 className="text-lg font-semibold mb-4">Tulot vs kulut kuukausittain</h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={chartData}>
-                <XAxis dataKey="month" stroke="#6b7280" />
-                <YAxis stroke="#6b7280" />
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={chartData} margin={{ top: 0, right: 8, left: -16, bottom: 0 }}>
+                <XAxis dataKey="month" stroke="#6b7280" tick={{ fontSize: 11 }} />
+                <YAxis stroke="#6b7280" tick={{ fontSize: 11 }} />
                 <Tooltip contentStyle={{ backgroundColor: '#111827', border: 'none' }} />
-                <Legend />
+                <Legend wrapperStyle={{ fontSize: 12 }} />
                 <Bar dataKey="tulot" fill="#10b981" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="kulut" fill="#f43f5e" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
-          <div className="bg-gray-900 rounded-2xl p-6 mb-6 border border-gray-800">
+          {/* PIIRAKKAKAAVIO */}
+          <div className="bg-gray-900 rounded-2xl p-4 sm:p-6 mb-6 border border-gray-800">
             <h2 className="text-lg font-semibold mb-4">Kulut kategorioittain</h2>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={280}>
               <PieChart>
                 <Pie
                   data={categoryData}
                   cx="50%"
-                  cy="50%"
-                  outerRadius={100}
+                  cy="45%"
+                  outerRadius="40%"
                   dataKey="value"
-                  label={({ name, percent }: { name?: string; percent?: number }) => `${name ?? ''} ${((percent ?? 0) * 100).toFixed(0)}%`}
+                  label={({ name, percent }: { name?: string; percent?: number }) =>
+                    `${name ?? ''} ${((percent ?? 0) * 100).toFixed(0)}%`
+                  }
+                  labelLine={true}
                 >
                   {COLORS.map((color, index) => (
                     <Cell key={index} fill={color} />
                   ))}
                 </Pie>
                 <Tooltip contentStyle={{ backgroundColor: '#111827', border: 'none' }} />
-                <Legend />
+                <Legend wrapperStyle={{ fontSize: 12 }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
 
-          <div className="bg-gray-900 rounded-2xl p-6 mb-6 border border-gray-800">
-            <div className="flex justify-between items-center mb-4">
+          {/* AI-ANALYYSI */}
+          <div className="bg-gray-900 rounded-2xl p-4 sm:p-6 mb-6 border border-gray-800">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
               <h2 className="text-lg font-semibold">🤖 AI-analyysi</h2>
               <button
                 onClick={async () => {
@@ -168,7 +182,7 @@ const fetchTransactions = async () => {
                   }
                   setAnalyysiLoading(false);
                 }}
-                className="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-lg text-sm font-medium transition"
+                className="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-lg text-sm font-medium transition w-full sm:w-auto"
               >
                 {analyysiLoading ? 'Analysoidaan...' : 'Analysoi kulutus'}
               </button>
@@ -178,16 +192,17 @@ const fetchTransactions = async () => {
             )}
           </div>
 
-          <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
+          {/* TAPAHTUMALISTA */}
+          <div className="bg-gray-900 rounded-2xl p-4 sm:p-6 border border-gray-800">
             <h2 className="text-lg font-semibold mb-4">Tapahtumat</h2>
             <div className="space-y-2">
               {transactions.map(t => (
-                <div key={t.id} className="flex justify-between items-center py-2 border-b border-gray-800">
-                  <div>
-                    <p className="text-sm font-medium">{t.description}</p>
+                <div key={t.id} className="flex justify-between items-start gap-3 py-2 border-b border-gray-800">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate">{t.description}</p>
                     <p className="text-xs text-gray-500">{t.date}</p>
                   </div>
-                  <p className={`font-semibold ${t.amount >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  <p className={`text-sm font-semibold shrink-0 ${t.amount >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                     {t.amount > 0 ? '+' : ''}{t.amount.toFixed(2)} €
                   </p>
                 </div>
