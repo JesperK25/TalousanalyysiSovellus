@@ -143,7 +143,7 @@ export default function Home() {
                   cy="50%"
                   outerRadius={100}
                   dataKey="value"
-                  label={(props: { name: string; percent: number }) => `${props.name} ${(props.percent * 100).toFixed(0)}%`}
+                  label={({ name, percent }: { name?: string; percent?: number }) => `${name ?? ''} ${((percent ?? 0) * 100).toFixed(0)}%`}
                 >
                   {COLORS.map((color, index) => (
                     <Cell key={index} fill={color} />
