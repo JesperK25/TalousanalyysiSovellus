@@ -1,7 +1,8 @@
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from sqlalchemy.orm import Session
 from ..database import get_db
-from ..models import Transaction
+from ..models import Transaction, User
+from ..auth import get_current_user
 from ..ml import predict_category
 import pandas as pd
 import io
@@ -9,7 +10,11 @@ import io
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 
 @router.post("/upload")
-async def upload_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def upload_csv(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
     if not file.filename.endswith(".csv"):
         raise HTTPException(status_code=400, detail="Tiedoston täytyy olla CSV")
 
@@ -30,7 +35,7 @@ async def upload_csv(file: UploadFile = File(...), db: Session = Depends(get_db)
             "Määrä": "amount"
         })
         df["date"] = df["date"].str[:10]
-    elif "Saaja/Maksaja" in df.columns and "Määrä" in df.columns:
+    elif "Saaja/Maksaja" in df.columns and "Määrä" in df.columns and "Päivämäärä" in df.columns:
         # Säästöpankki-formaatti
         df = df.rename(columns={
             "Päivämäärä": "date",
@@ -44,17 +49,33 @@ async def upload_csv(file: UploadFile = File(...), db: Session = Depends(get_db)
         if not required.issubset(df.columns):
             raise HTTPException(status_code=400, detail=f"CSV:stä puuttuu sarakkeet: {required - set(df.columns)}")
 
+    existing = {
+        (t.date, t.description, t.amount)
+        for t in db.query(Transaction.date, Transaction.description, Transaction.amount)
+        .filter(Transaction.user_id == user.id)
+        .all()
+    }
+
     added = 0
+    skipped = 0
     for _, row in df.iterrows():
         try:
             date = pd.to_datetime(row["date"], errors="coerce")
             if pd.isna(date):
                 continue
-            category = predict_category(str(row["description"]))
+            description = str(row["description"])
+            amount = float(row["amount"])
+            key = (date.date(), description, amount)
+            if key in existing:
+                skipped += 1
+                continue
+            existing.add(key)
+            category = predict_category(description)
             t = Transaction(
+                user_id=user.id,
                 date=date.date(),
-                description=str(row["description"]),
-                amount=float(row["amount"]),
+                description=description,
+                amount=amount,
                 category=category,
             )
             db.add(t)
@@ -63,15 +84,26 @@ async def upload_csv(file: UploadFile = File(...), db: Session = Depends(get_db)
             print(f"Rivi hylätty: {e}")
             continue
 
+    if added == 0 and skipped == 0 and len(df) > 0:
+        raise HTTPException(status_code=400, detail="Yhtään riviä ei voitu lukea. Tarkista CSV:n muoto.")
+
     db.commit()
-    return {"message": f"{added} transaktiota lisätty"}
+    message = f"{added} transaktiota lisätty"
+    if skipped:
+        message += f", {skipped} ohitettu duplikaattina"
+    return {"message": message}
 
 @router.get("/")
-def get_transactions(db: Session = Depends(get_db)):
-    return db.query(Transaction).order_by(Transaction.date.desc()).all()
+def get_transactions(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return (
+        db.query(Transaction)
+        .filter(Transaction.user_id == user.id)
+        .order_by(Transaction.date.desc())
+        .all()
+    )
 
 @router.delete("/clear")
-def clear_transactions(db: Session = Depends(get_db)):
-    db.query(Transaction).delete()
+def clear_transactions(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    db.query(Transaction).filter(Transaction.user_id == user.id).delete()
     db.commit()
     return {"message": "Kaikki transaktiot poistettu"}
