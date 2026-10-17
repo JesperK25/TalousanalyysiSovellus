@@ -1,4 +1,6 @@
+import logging
 import os
+import secrets
 from datetime import datetime, timedelta, timezone
 
 import bcrypt
@@ -10,7 +12,20 @@ from sqlalchemy.orm import Session
 from .database import get_db
 from .models import User
 
-SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-me-in-production")
+logger = logging.getLogger(__name__)
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    # Ei julkista oletusavainta: GitHubissa näkyvällä avaimella kuka tahansa voisi
+    # väärentää kirjautumistokeneita. Jos avain puuttuu, käytetään prosessikohtaista
+    # satunnaista avainta. Kirjautumiset vanhenevat uudelleenkäynnistyksessä, mutta
+    # sovellus pysyy käynnissä ja turvallisena.
+    SECRET_KEY = secrets.token_urlsafe(64)
+    logger.warning(
+        "SECRET_KEY puuttuu ympäristömuuttujista, käytetään väliaikaista satunnaista "
+        "avainta. Aseta SECRET_KEY, jotta kirjautumiset säilyvät uudelleenkäynnistyksen yli."
+    )
+
 ALGORITHM = "HS256"
 TOKEN_EXPIRE_DAYS = 30
 
