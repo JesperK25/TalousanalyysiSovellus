@@ -7,6 +7,9 @@ kaavioina ja antaa Claude-tekoälyn avulla henkilökohtaisia säästövinkkejä.
 Rakennettu portfolioprojektiksi, jossa yhdistyvät full stack -kehitys, klassinen koneoppiminen
 ja LLM-integraatio tuotannossa.
 
+**Live:** https://talousanalyysi-sovellus-3i9b.vercel.app/
+("Katso demo ilman tunnusta" näyttää sovelluksen valmiilla esimerkkidatalla.)
+
 ## Ominaisuudet
 
 - **CSV-tiliotteen lataus:** tukee Revolutin ja Säästöpankin vientimuotoja sekä yleistä
